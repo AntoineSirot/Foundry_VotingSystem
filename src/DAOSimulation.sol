@@ -7,8 +7,8 @@ contract DAOSimulation {
         uint startingTimestamp;
         uint finalTimestamp;
         string description;
-        string[2] possibilities;
-        uint[2] answers;
+        string[] possibilities;
+        uint[] answers;
         address[] participants;
     }
 
@@ -21,13 +21,15 @@ contract DAOSimulation {
     error WrongChoice(uint choice);
 
     event Voted(uint id, address voter);
+    event PoolCreated(uint id, string description, address creator);
 
     function createPoll(
         uint duration,
         string calldata _description,
-        string[2] calldata _possibilities
+        string[] memory _possibilities
     ) public returns (uint) {
-        uint[2] memory initVotes = [uint256(0), uint256(0)];
+        uint length = _possibilities.length;
+        uint[] memory initVotes = new uint[](length);
         pools.push(
             Pool({
                 id: pools.length,
@@ -39,6 +41,7 @@ contract DAOSimulation {
                 participants: new address[](0)
             })
         );
+        emit PoolCreated(pools.length - 1, _description, msg.sender);
 
         return pools.length - 1;
     }
@@ -59,7 +62,7 @@ contract DAOSimulation {
             revert VotingEnded(pools[pollId].finalTimestamp, block.timestamp);
         }
 
-        if (choice != 0 && choice != 1) {
+        if (choice < 0 || choice >= pools[pollId].possibilities.length) {
             revert WrongChoice(choice);
         }
 
@@ -98,8 +101,8 @@ contract DAOSimulation {
             uint,
             uint,
             string memory,
-            string[2] memory,
-            uint[2] memory,
+            string[] memory,
+            uint[] memory,
             address[] memory
         )
     {
